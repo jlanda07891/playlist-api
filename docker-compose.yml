@@ -1,0 +1,41 @@
+version: "2.2"
+services:
+        nginx:
+                image: nginx
+                container_name: nginx-container
+                ports:
+                        - "80:80"
+                restart: always
+                volumes:
+                        - "./web:/var/www/html"
+                        - "./etc/nginx/log/error.log:/var/log/nginx/error.log"
+                        - "./etc/nginx/log/access.log:/var/log/nginx/access.log"
+                        - "./etc/nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf"
+                links:
+                        - php
+        php:
+                image: php:7-fpm
+                volumes:
+                        - "./web:/var/www/html"
+                links:
+                        - mysql
+        mysql:
+                image: mysql
+                user: "1000:50"
+                command: "--innodb_use_native_aio=0"
+                container_name: mysql-container
+                restart: always
+                env_file:
+                        - ".env"
+                environment:
+                        - MYSQL_DATABASE=${MYSQL_DATABASE}
+                        - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+                        - MYSQL_USER=${MYSQL_USER}
+                        - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+                ports:
+                        - "3306:3306"
+                volumes:
+                        - "./data/db/mysql:/var/lib/mysql:rw"
+                        - "./data/sql-scripts/update_user.sql:/docker-entrypoint-initdb.d/update_user.sql"
+                        - "./data/sql-scripts/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql"
+                        - "./data/sql-scripts/feed_tables.sql:/docker-entrypoint-initdb.d/feed_tables.sql"
