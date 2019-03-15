@@ -18,14 +18,10 @@ class Playlist {
 	 *
 	 * @param integer $playlist_id The id of the playlist
 	 * @param string $name The name of the playlist
-	 * @param integer $video_id A video_id
-	 * @param integer $video_placement A video position
 	 *
  	*/
 	public $playlist_id;
 	public $name;
-	public $video_id;
-	public $video_placement;
 
 	/* construct */
 	public function __construct($db){
@@ -60,13 +56,12 @@ class Playlist {
 	/**
 	 * Return the position of a given playlist's video
 	 *
-	 * @param integer $this->playlist_id The id of the playlist
-	 * @param integer $this->video_id The id of the video
+	 * @param integer $video_id The id of the video
 	 * @return Integer
 	 */
-	public function get_video_current_pos(){
+	public function get_video_current_pos($video_id){
 		// get the video position given playlist_id and video_id parameters
-		$sql_video_actual_pos = sprintf("select video_order from playlist_video where playlist_id = %d and video_id = %d",$this->playlist_id,$this->video_id);
+		$sql_video_actual_pos = sprintf("select video_order from playlist_video where playlist_id = %d and video_id = %d",$this->playlist_id,$video_id);
 		$stmt 	= $this->conn->query($sql_video_actual_pos);
 		$row 	= $stmt->fetch_assoc();
 		return intval($row['video_order']);
@@ -75,21 +70,20 @@ class Playlist {
 	/**
 	 * Remove a video from a playlist
 	 *
-	 * @param integer $this->playlist_id The id of the playlist
-	 * @param integer $this->video_id The id of the video to remove
+	 * @param integer $video_id The id of the video to remove
 	 * @return Boolean
 	 */
-	public function remove_video(){
+	public function remove_video($video_id){
 
 		// first we get the position of the video to remove
-		$video_current_pos = $this->get_video_current_pos();
+		$video_current_pos = $this->get_video_current_pos($video_id);
 		// if no position found, then the video doesn't exists in the playlist
                 if(!$video_current_pos) return false;
 
 		// remove the video from the playlist
 		$sql_remove_video = "delete from playlist_video where playlist_id = ? and video_id = ?;";
 		$stmt = $this->conn->prepare($sql_remove_video);
-		$stmt->bind_param("dd", $this->playlist_id, $this->video_id);
+		$stmt->bind_param("dd", $this->playlist_id, $video_id);
 		if(!$stmt->execute()){
 			$this->conn->close();
 			return false;
@@ -111,25 +105,24 @@ class Playlist {
 	/**
 	 * Move a video inside a playlist
 	 *
-	 * @param integer $this->playlist_id The id of the playlist
-	 * @param integer $this->video_id The id of the video to move
-	 * @param integer $this->video_placement The position of the video to move
+	 * @param integer $video_id The id of the video to move
+	 * @param integer $video_placement The position of the video to move
 	 * @return Boolean
 	 */
-	public function move_video(){
+	public function move_video($video_id,$video_placement){
 		
 		// first we get the position of the video to remove
-		$video_current_pos = $this->get_video_current_pos();
+		$video_current_pos = $this->get_video_current_pos($video_id);
 		// if no position found, then the video doesn't exists in the playlist
                 if(!$video_current_pos) return false;
 
 		// the position requested is the current one, no move needed
-		if($this->video_placement == $video_current_pos){
+		if($video_placement == $video_current_pos){
 			$this->conn->close();
 			return true;
 		}
 		// if the video is moved earlier inside the playlist
-		else if($this->video_placement < $video_current_pos){
+		else if($video_placement < $video_current_pos){
 			// all the videos from the new position to the actual position must be shifted by +1
 			$sql_update_playlist = "update playlist_video set video_order = video_order+1 where video_order >= ? and video_order < ? and playlist_id = ?;";
 		}
@@ -141,7 +134,7 @@ class Playlist {
 
 		// update position of videos
 		$stmt = $this->conn->prepare($sql_update_playlist);
-		$stmt->bind_param("ddd", $this->video_placement, $video_current_pos, $this->playlist_id);
+		$stmt->bind_param("ddd", $video_placement, $video_current_pos, $this->playlist_id);
 		if(!$stmt->execute()){
 			$this->conn->close();
 			return false;
@@ -150,7 +143,7 @@ class Playlist {
 		// the video can now be moved to the new position
 		$sql_move_video = "update playlist_video set video_order = ? where video_id = ? and playlist_id = ?;";
 		$stmt = $this->conn->prepare($sql_move_video);
-		$stmt->bind_param("ddd", $this->video_placement, $this->video_id, $this->playlist_id);
+		$stmt->bind_param("ddd", $video_placement, $video_id, $this->playlist_id);
 		if(!$stmt->execute()){
 			$this->conn->close();
 			return false;
@@ -163,19 +156,18 @@ class Playlist {
 	/**
 	 * Add a video inside a playlist
 	 *
-	 * @param integer $this->playlist_id The id of the playlist
-	 * @param integer $this->video_id The id of the video to add
-	 * @param integer $this->video_placement The position of the video to add
+	 * @param integer $video_id The id of the video to add
+	 * @param integer $video_placement The position of the video to add
 	 * @return Boolean
 	 */
-	public function add_video(){
+	public function add_video($video_id,$video_placement){
 
 		// first all the videos starting a the new position must be shifted by +1
 		$sql_update_order = "update playlist_video 
 					set video_order = video_order+1 
 					where video_order >= ? and playlist_id = ?;";
 		$stmt = $this->conn->prepare($sql_update_order);
-		$stmt->bind_param("dd", $this->video_placement, $this->playlist_id);
+		$stmt->bind_param("dd", $video_placement, $this->playlist_id);
 		// execute query
 		if(!$stmt->execute()){
 			$this->conn->close();
@@ -185,7 +177,7 @@ class Playlist {
 		// insert the new video in playlist, at position needed
 		$sql  = "insert into playlist_video (video_id,video_order,playlist_id) values (?,?,?);";
 		$stmt = $this->conn->prepare($sql);
-		$stmt->bind_param("ddd", $this->video_id, $this->video_placement, $this->playlist_id);
+		$stmt->bind_param("ddd", $video_id, $video_placement, $this->playlist_id);
 		// execute query
 		if($stmt->execute()){
 			$this->conn->close();
