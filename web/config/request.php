@@ -77,6 +77,10 @@ class Request {
 				}
 			}
 		}
+		else {
+			$this->response_message(404, ["message" => "GET requests not supported"]);
+			return false;
+		}
 		return true;
 	}
 
