@@ -1,5 +1,6 @@
-# playlist-api
-rest api to manage an ordered playlist
+# Playlist-api
+
+This PHP api manage an ordered playlist.
 
 # Run the application
 
@@ -102,8 +103,8 @@ The file docker-compose.yml defines thoses services, networks and their volumes 
   * the SQL files to execute on application start in ./data/sql-scripts/
   
 At the application start, 3 SQL scripts are executed in order to :
-  * create tables
-  * feed with rows
+  * create tables in a mysql "playlist" database ("playlist", "video" and "playlist_video" table to link a video to a playlist)
+  * feed each table with rows
   * update user access and privileges
   
 The PHP API is located in web/ folder :
