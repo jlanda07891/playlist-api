@@ -44,7 +44,7 @@ class PlaylistController {
 		$playlist->playlist_id = $this->get_params['id'];
 		$stmt = $playlist->getOne();
 		// data will be fetched, store into a result and send with a HTTP response
-		$this->fetch_data($stmt);
+		$this->return_data($stmt);
 	}
 	
 	/**
@@ -55,7 +55,7 @@ class PlaylistController {
 		// init Video class
 		$playlist = new Video($this->db);
 		$stmt = $playlist->getAll();
-		$this->fetch_data($stmt);
+		$this->return_data($stmt);
 	}
 	
 	/**
@@ -71,7 +71,7 @@ class PlaylistController {
 			$playlist->playlist_id = $this->get_params['id'];
 		}
 		$stmt = $playlist->getAll();
-		$this->fetch_data($stmt);
+		$this->return_data($stmt);
 	}
 	
 	/**
@@ -81,20 +81,18 @@ class PlaylistController {
 	public function delete(){
 		// init object
 		$playlist = new Playlist($this->db);
-		// test if the required params are not empty 
+		// test if all the required params are present 
 		if(!empty($this->post_params->id_playlist)){
 			// set public properties of Playlist
 			$playlist->playlist_id = $this->post_params->id_playlist;
 
 			// delete the playlist
 			if($playlist->delete()){
-				$this->request->response_message(404, ["message" => "playlist succesfully deleted"]);
+				$this->response_message(200,"playlist succesfully deleted");
 			}
-			else $this->request->response_message(503, ["message" => "unable to delete playlist"]);
-
+			else $this->response_message(503,"unable to delete playlist");
 		}
-		else $this->request->response_message(404, ["message" => "unable to delete playlist, please specify a playlist_id"]);
-		
+		else $this->response_message(404,"unable to delete playlist, please specify a playlist_id");	
 	}
 
 	/**
@@ -105,19 +103,19 @@ class PlaylistController {
 		
 		// init object
 		$playlist = new Playlist($this->db);
-		// test if the required params are not empty 
+		// test if all the required params are present 
 		if(!empty($this->post_params->id_video) && !empty($this->post_params->id_playlist)){
 			// set public properties of Playlist
 			$playlist->playlist_id 	   = $this->post_params->id_playlist;
-			$playlist->video_id        = $this->post_params->id_video;
-
+			
+			$video_id = $this->post_params->id_video;
 			// remove the video from the playlist
-			if($playlist->remove_video()){
-				$this->request->response_message(404, ["message" => "video succesfully removed to playlist"]);
+			if($playlist->remove_video($video_id)){
+				$this->response_message(200,"video succesfully removed to playlist");
 			}
-			else $this->request->response_message(503, ["message" => "unable to remove video into playlist"]);
+			else $this->response_message(503,"unable to remove video from playlist");
 		}
-		else $this->request->response_message(404, ["message" => "unable to remove the video, please specify an id_video and id_playlist"]);
+		else $this->response_message(404,"unable to remove the video, please specify an id_video and id_playlist");
 	}
 
 	/**
@@ -128,20 +126,20 @@ class PlaylistController {
 		
 		// init Playlist class
 		$playlist = new Playlist($this->db);
-		// test if the required params are not empty
+		// test if all the required params are present
 		if(!empty($this->post_params->id_video) && !empty($this->post_params->id_playlist) && !empty($this->post_params->placement)){
 			// set public properties of Playlist
 			$playlist->playlist_id 	   = $this->post_params->id_playlist;
-			$playlist->video_id        = $this->post_params->id_video;
-			$playlist->video_placement = $this->post_params->placement;
+			$video_id        	   = $this->post_params->id_video;
+			$video_placement 	   = $this->post_params->placement;
 
 			// move the video in playlist
-			if($playlist->move_video()){
-				$this->request->response_message(404, ["message" => "video succesfully moved to playlist"]);
+			if($playlist->move_video($video_id,$video_placement)){
+				$this->response_message(200,"video succesfully moved into playlist");
 			}
-			else $this->request->response_message(503, ["message" => "unable to move video into playlist"]);
+			else $this->response_message(503,"unable to move video into playlist");
 		}
-		else $this->request->response_message(404, ["message" => "unable to move the video, please specify an id_video, id_playlist and placement"]);
+		else $this->response_message(404,"unable to move the video, please specify an id_video, id_playlist and placement");
 	}
 	
 	/**
@@ -152,20 +150,20 @@ class PlaylistController {
 		
 		// init Playlist class
 		$playlist = new Playlist($this->db);
-		// test if the required params are not empty
+		// test if all the required params are present
 		if(!empty($this->post_params->id_video) && !empty($this->post_params->id_playlist) && !empty($this->post_params->placement)){
 			// set public properties of Playlist
 			$playlist->playlist_id 	   = $this->post_params->id_playlist;
-			$playlist->video_id        = $this->post_params->id_video;
-			$playlist->video_placement = $this->post_params->placement;
+			$video_id        	   = $this->post_params->id_video;
+			$video_placement 	   = $this->post_params->placement;
 
 			// add the video in playlist
-			if($playlist->add_video()){
-				$this->request->response_message(404, ["message" => "video succesfully added to playlist"]);
+			if($playlist->add_video($video_id,$video_placement)){
+				$this->response_message(200,"video succesfully added to playlist");
 			}
-			else $this->request->response_message(503, ["message" => "unable to add video into playlist"]);
+			else $this->response_message(503,"unable to add video into playlist");
 		}
-		else $this->request->response_message(404, ["message" => "unable to add video to playlist, please specify an id_video, id_playlist and placement"]);
+		else $this->response_message(404,"unable to add video to playlist, please specify an id_video, id_playlist and placement");
 	}  
 	
 	/**
@@ -176,7 +174,7 @@ class PlaylistController {
 		
 		// init Playlist class
 		$playlist = new Playlist($this->db);
-		// test if the required params are not empty
+		// test if all the required params are present
 		if(!empty($this->post_params->name) and !empty($this->post_params->id_playlist)){
 			// set public properties of Playlist
 			$playlist->name = $this->post_params->name;
@@ -184,11 +182,11 @@ class PlaylistController {
 
 			// update the playlist
 			if($playlist->update()){
-				$this->request->response_message(404, ["message" => sprintf("playlist %s succesfully updated",$this->post_params->name)]);
+				$this->response_message(200,sprintf("playlist %s succesfully updated",$this->post_params->name));
 			}
-			else $this->request->response_message(503, ["message" => "unable to update playlist"]);
+			else $this->response_message(503,"unable to update playlist");
 		}
-		else $this->request->response_message(404, ["message" => "unable to modify playlist, please specify a playlist_id and name"]);
+		else $this->response_message(404,"unable to modify playlist, please specify a playlist_id and name");
 	}
 	
 	/**
@@ -199,25 +197,25 @@ class PlaylistController {
 		
 		// init object
 		$playlist = new Playlist($this->db);
-		// test if the required params are not empty
+		// test if all the required params are present
 		if(!empty($this->post_params->name)){
 			// set public properties of Playlist
 			$playlist->name = $this->post_params->name;
 
 			// create the playlist
 			if($playlist->create()){
-				$this->request->response_message(404, ["message" => sprintf("playlist %s succesfully created",$this->post_params->name)]);
+				$this->response_message(200,sprintf("playlist %s succesfully created",$this->post_params->name));
 			}
-			else $this->request->response_message(503, ["message" => "unable to create playlist"]);
+			else $this->response_message(503,"unable to create playlist"); 
 		}
-		else $this->request->response_message(404, ["message" => "unable to create the playlist, please specify a name"]);
+		else $this->response_message(404,"unable to create the playlist, please specify a name");
 	}
 	
 	/**
 	 * Fetch the statement, store rows into an array
 	 * @return Request:response_message()
 	 */
-	public function fetch_data($stmt){
+	private function return_data($stmt){
 	
 		$num_rows = $stmt->num_rows;
 
@@ -231,14 +229,22 @@ class PlaylistController {
 
 			// set response code - 200 OK
 			// show object data in json format
-		        $this->request->response_message(200, $result);
+		    	$this->response_message(200,$result);
 		}
 		// no video or playlist found
 		else{
 		    // set response code - 404 Not found
 		    // tell the user no object found
-		    $this->request->response_message(404, ["message" => sprintf("no %s found","playlist")]);
+		    $this->response_message(404,"no playlist found");
 		}
+	}
+	
+	/**
+	 * shortcut function to call Request:response_message()
+	 * @return Request:response_message()
+	 */
+	private function response_message($code,$msg){
+		$this->request->response_message($code,$msg);
 	}
 
 }
