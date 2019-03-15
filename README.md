@@ -1,6 +1,41 @@
 # playlist-api
 rest api to manage an ordered playlist
 
+# How it works
+
+This Docker-application starts 3 services in containers : mysql, nginx and php7-fpm.
+
+The file docker-compose.yml defining thoses services, networks and their volumes :
+
+* nginx
+  * the logs (access and error) are stored in ./etc/nginx/log/
+  * the conf is located in ./etc/nginx/conf.d/default.conf
+* php:7-fpm
+  * the php files are located in ./web/
+* mysql
+  * the data is stored in ./data/db/mysql
+  * the SQL files to execute on application start in ./data/sql-scripts/
+  
+At the application start, 3 SQL scripts are executed in order to :
+  * create tables
+  * feed with rows
+  * update user access and privileges
+  
+The PHP API is located in web/ folder :
+```
+├─── web
+├────── index.php - core controller of the api : dispatch task given the method used (GET, POST, PUT and DELETE)
+├────── config
+├──────────── database.php - class to init a new mysql conll danection
+├──────────── request.php - class to parse request parameters / return messages to user with HTTP status
+├────── model
+├──────────── playlist.php - contains properties and methods for "playlist" database queries
+├──────────── video.php  contains properties and methods for "video" database queries
+├────── controller - controller are called from index.php
+├──────────── playlist.php - class to prepare data of playlist objects + needed methods (read, create, update and delete)
+├──────────── video.php - same for video
+```
+
 # Run the application
 
 First git clone the project and navigate to the project's root folder.
