@@ -35,9 +35,9 @@ Here is how to get your ip-machine :
 docker-machine ip default
 ```
 
-The pattern of the API url is te following : localhost/action/action_name/id
-* action_name refers to the action needed
-* id is optionnal and refers to a specific playlist
+The pattern of the API url is the following : localhost/action/action_name/id
+* action_name parameter refers to the action needed
+* id is an optionnal integer parameter and refers to a specific playlist
 
 List of the action :
 
@@ -90,7 +90,7 @@ curl -X POST --header "Content-Type: application/json" --data '{"id_video":5,"id
 
 This Docker-application starts 3 services in containers : mysql, nginx and php7-fpm.
 
-The file docker-compose.yml defining thoses services, networks and their volumes :
+The file docker-compose.yml defines thoses services, networks and their volumes :
 
 * nginx
   * the logs (access and error) are stored in ./etc/nginx/log/
@@ -109,7 +109,7 @@ At the application start, 3 SQL scripts are executed in order to :
 The PHP API is located in web/ folder :
 ```
 ├─── web
-├────── index.php - core controller of the api : dispatch tasks given the action in URL
+├────── index.php - core dispatcher of the api : dispatch tasks given the action in URL
 ├────── config
 ├──────────── database.php - class to init a new mysqli connection
 ├──────────── request.php - class to validate request parameters and return messages to user with HTTP status
@@ -118,5 +118,21 @@ The PHP API is located in web/ folder :
 ├──────────── video.php  contains properties and methods for "video" database queries
 ├────── controller
 ├──────────── playlist.php - controller to verify missing params and call methods of playlist model
-├──────────── video.php - same for video
+
+When the user request the api : 
+1. the core dispatcher (index.php) parse the url parameters (action and id), verify the POST parameters with the Request class (is each parameter known and allowed, is it empty, does it have the good pattern ?)
+2. if the action required is known, and the parameters alright, the controller playlist is called with a specific method
+3. each method of the playlist controller checks that all the required parameters are present (e.g. if we want to move a video, then 'id_video', 'id_playlist' and 'placement' parameters are required) and call a method in the model playlist
+4. each method of the playlist model get, create, modify or delete informations about a playlist.
+
+```
+# troubleshooting
+
+Try remove all unused containers, networks, images, and optionally, volumes :
+```
+docker system prune
+```
+You can also manually stop the containers with the following command :
+```
+docker stop nginx-container && docker stop playlistapi_php_1 && docker stop mysql-container
 ```
