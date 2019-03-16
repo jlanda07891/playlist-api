@@ -45,46 +45,46 @@ List of the action :
 ## get Data
 ### get all the playlists
 ```
-curl -X GET http://192.168.99.100/action/getplaylist/
+curl -X GET http://localhost/action/getplaylist/
 ```
 ### get a specific playlist
 ```
-curl -X GET http://192.168.99.100/action/getplaylist/1
+curl -X GET http://localhost/action/getplaylist/1
 ```
 ### get all the videos
 ```
-curl -X GET http://192.168.99.100/action/getvideos/
+curl -X GET http://localhost/action/getvideos/
 ```
 ### get all the videos from a playlist
 ```
-curl -X GET http://192.168.99.100/action/getplaylistvideos/1
+curl -X GET http://localhost/action/getplaylistvideos/1
 ```
 
 ## create / modify / delete data
 
 ### create a new playlist
 ```
-curl -X POST --header "Content-Type: application/json" --data '{"name":"bestof_2015"}' http://192.168.99.100/action/createplaylist/
+curl -X POST --header "Content-Type: application/json" --data '{"name":"bestof_2015"}' http://localhost/action/createplaylist/
 ```
 ### delete a playlist
 ```
-curl -X POST --header "Content-Type: application/json" --data '{"id_playlist":5}' http://192.168.99.100/action/deleteplaylist/
+curl -X POST --header "Content-Type: application/json" --data '{"id_playlist":5}' http://localhost/action/deleteplaylist/
 ```
 ### update a playlist
 ```
-curl -X POST --header "Content-Type: application/json" --data '{"id_playlist":1,"name":"bestof2018_volume2"}' http://192.168.99.100/action/updateplaylist/
+curl -X POST --header "Content-Type: application/json" --data '{"id_playlist":1,"name":"bestof2018_volume2"}' http://localhost/action/updateplaylist/
 ```
 ### add a video to a playlist with position
 ```
-curl -X POST --header "Content-Type: application/json" --data '{"id_video":5,"id_playlist":2,"placement":2}' http://192.168.99.100/action/addtoplaylist/
+curl -X POST --header "Content-Type: application/json" --data '{"id_video":5,"id_playlist":2,"placement":2}' http://localhost/action/addtoplaylist/
 ```
 ### move a video to new position inside a playlist
 ```
-curl -X POST --header "Content-Type: application/json" --data '{"id_video":5,"id_playlist":2,"placement":3}' http://192.168.99.100/action/moveinplaylist/
+curl -X POST --header "Content-Type: application/json" --data '{"id_video":5,"id_playlist":2,"placement":3}' http://localhost/action/moveinplaylist/
 ```
 ### remove a video from a playlist
 ```
-curl -X POST --header "Content-Type: application/json" --data '{"id_video":5,"id_playlist":2}' http://192.168.99.100/action/removefromplaylist/
+curl -X POST --header "Content-Type: application/json" --data '{"id_video":5,"id_playlist":2}' http://localhost/action/removefromplaylist/
 ```
 
 # How it works
