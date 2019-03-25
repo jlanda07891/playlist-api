@@ -29,13 +29,35 @@ class Request {
 	);
 
 	/**
+ 	* const to store authorized HTTP methods
+ 	*/
+	const HTTP_METHODS = array(
+		'POST',
+		'PUT',
+		'DELETE'
+	);
+
+
+	/**
 	 * construct
 	 * */
-	public function __construct($server){
+	public function __construct($server, $get_params=null){
 		$this->server = $server;
 		$this->method = $this->server['REQUEST_METHOD'];
+		$this->get_params = $get_params;
 	}
-	
+
+	/**
+	 * Return a specific GET parameter
+	 *
+	 * @param string $param name of the parameter to extract
+	 * @return String
+	 */
+	public function get_param($param){
+		return str_replace("/","",$this->get_params[$param]); 
+	}
+
+
 	/**
 	 * Validate the post parameters
 	 *
@@ -44,7 +66,7 @@ class Request {
 	 */
 	public function validate_params($params){
 
-		if($this->method == "POST") {
+		if(in_array($this->method,self::HTTP_METHODS)) {
 
 			// extract keys from parameters
 			$param_keys = array_keys(get_object_vars($params));
@@ -78,7 +100,7 @@ class Request {
 			}
 		}
 		else {
-			$this->response_message(404, ["message" => "GET requests not supported"]);
+			$this->response_message(404, ["message" => sprintf("%s requests not supported",$this->method)]);
 			return false;
 		}
 		return true;

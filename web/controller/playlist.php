@@ -11,7 +11,7 @@
 include_once './config/database.php';
 include_once './model/playlist.php';
 include_once './model/video.php';
-include_once './config/request.php';
+include_once './lib/request.php';
 
 /**
  * class PlaylistController
@@ -29,7 +29,7 @@ class PlaylistController {
 		// init database and playlist object
 		$database 	   = new Database();
 		$this->db 	   = $database->getConnection();
-		$this->request 	   = new Request($_SERVER);
+		$this->request 	   = new Request($_SERVER, $get_params);
 		$this->get_params  = $get_params;
 		$this->post_params = $post_params;
 	}
@@ -40,11 +40,14 @@ class PlaylistController {
 	 */
 	public function getPlaylistVideos(){
 		// init Video class
-		$playlist = new Playlist($this->db);
-		$playlist->playlist_id = $this->get_params['id'];
-		$stmt = $playlist->getOne();
-		// data will be fetched, store into a result and send with a HTTP response
-		$this->return_data($stmt);
+		$id_param = $this->request->get_param('playlist_id');
+		if(isset($id_param)){
+			$playlist = new Playlist($this->db);
+			$playlist->playlist_id = $id_param;
+			$stmt = $playlist->getOne();
+			// data will be fetched, store into a result and send with a HTTP response
+			$this->return_data($stmt);
+		}
 	}
 	
 	/**
@@ -62,7 +65,7 @@ class PlaylistController {
 	 * Get either all the playlists or a playlist if a playlist_id is specified
 	 * @return Request:response_message()
 	 */
-	public function getPlaylist(){
+	public function getPlaylists(){
 		// init Playlist class
 		$playlist = new Playlist($this->db);
 		// if a playlist id is specified
@@ -82,9 +85,9 @@ class PlaylistController {
 		// init object
 		$playlist = new Playlist($this->db);
 		// test if all the required params are present 
-		if(!empty($this->post_params->id_playlist)){
+		if(isset($this->get_params['id'])){
 			// set public properties of Playlist
-			$playlist->playlist_id = $this->post_params->id_playlist;
+			$playlist->playlist_id = $this->get_params['id'];
 
 			// delete the playlist
 			if($playlist->delete()){
@@ -104,7 +107,7 @@ class PlaylistController {
 		// init object
 		$playlist = new Playlist($this->db);
 		// test if all the required params are present 
-		if(!empty($this->post_params->id_video) && !empty($this->post_params->id_playlist)){
+		if(!empty($this->get_params['id']) && !empty($this->get_params['id_video'])){
 			// set public properties of Playlist
 			$playlist->playlist_id 	   = $this->post_params->id_playlist;
 			
@@ -151,10 +154,10 @@ class PlaylistController {
 		// init Playlist class
 		$playlist = new Playlist($this->db);
 		// test if all the required params are present
-		if(!empty($this->post_params->id_video) && !empty($this->post_params->id_playlist) && !empty($this->post_params->placement)){
+		if(!empty( $this->request->get_param('video_id') ) && !empty( $this->request->get_param('playlist_id') ) && !empty($this->post_params->placement)){
 			// set public properties of Playlist
-			$playlist->playlist_id 	   = $this->post_params->id_playlist;
-			$video_id        	   = $this->post_params->id_video;
+			$playlist->playlist_id 	   = $this->request->get_param('playlist_id');
+			$video_id        	   = $this->request->get_param('video_id');
 			$video_placement 	   = $this->post_params->placement;
 
 			// add the video in playlist
