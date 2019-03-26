@@ -11,4 +11,4 @@ insert into `playlist`.`video` (title, thumbnail) values ("video1","https://www.
 -- -----------------------------------------------------
 -- inserts into `playlist`.`playlist_video`
 -- -----------------------------------------------------
-insert into `playlist`.`playlist_video` (video_id,video_order,playlist_id) values (1,1,1),(2,2,1),(3,3,1),(4,4,1),(5,5,1),(3,1,2),(4,2,2);
+insert into `playlist`.`playlist_video` (video_id,video_order,playlist_id) values (1,1,1),(2,2,1),(3,3,1),(4,4,1),(3,1,2),(4,2,2);
