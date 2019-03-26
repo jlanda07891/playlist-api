@@ -36,7 +36,16 @@ class Request {
 		'PUT',
 		'DELETE'
 	);
-
+	
+	/**
+ 	* const to store known URL params and possible values
+ 	*/
+	const URI_PARAMS = array(
+		'ressource1' 	=> ['playlists','videos'],
+		'ressource2' 	=> ['videos'],
+		'playlist_id' 	=> [],
+		'video_id' 	=> []
+	);
 
 	/**
 	 * construct
@@ -57,51 +66,77 @@ class Request {
 		return str_replace("/","",$this->get_params[$param]); 
 	}
 
+	/**
+	 * Validate the URI parameters
+	 * @return Boolean
+	 */
+	public function validate_uri(){
+		foreach($this->get_params as $param_name => $param_value){
+			// extract the parameter's value
+			$param_value = $this->get_param($param_name);
+
+			if(empty($param_value)) continue;
+
+			// the ressource's name requested in URI is unknown
+			if( !array_key_exists($param_name, self::URI_PARAMS) ){
+				$this->response_message(404, ["message" => sprintf("parameter '%s' in URI is unknown",$param_name)]);
+				return false;
+			}
+			// the value of the ressource is unknown
+			if( count(self::URI_PARAMS[$param_name]) and !in_array($param_value, self::URI_PARAMS[$param_name]) ){
+				$this->response_message(404, ["message" => sprintf("possible values for URI parameter '%s' are %s",$param_name,implode(",",self::URI_PARAMS[$param_name]))]);
+				return false;
+			}
+		}
+		return true;
+	}
 
 	/**
-	 * Validate the post parameters
+	 * Validate the POST parameters
 	 *
 	 * @param stdclass object $params Object that contains POST params
 	 * @return Boolean
 	 */
 	public function validate_params($params){
 
-		if(in_array($this->method,self::HTTP_METHODS)) {
+		if($params){
+			if(in_array($this->method,self::HTTP_METHODS)) {
+		
+				// extract keys from parameters
+				$param_keys = array_keys(get_object_vars($params));
 
-			// extract keys from parameters
-			$param_keys = array_keys(get_object_vars($params));
+				// foreach key
+				foreach($param_keys as $key){
+					// if this parameter is allowed 
+					if(isset(self::PARAMS_REGEX[$key])){
 
-			// foreach key
-			foreach($param_keys as $key){
-				// if this parameter is allowed 
-				if(isset(self::PARAMS_REGEX[$key])){
+						// get the value of this parameter
+						$value = $params->$key;
 
-					// get the value of this parameter
-					$value = $params->$key;
-
-					// if the parameter is not empty
-					if(!empty($value)) {
-						// if the parameter pattern is correct
-						if(preg_match( self::PARAMS_REGEX[$key], $value )) continue;
+						// if the parameter is not empty
+						if(!empty($value)) {
+							// if the parameter pattern is correct
+							if(preg_match( self::PARAMS_REGEX[$key], $value )) continue;
+							else {
+								$this->response_message(404, ["message" => "bad pattern for param $key"]);
+								return false;
+							}
+						}
 						else {
-							$this->response_message(404, ["message" => "bad pattern for param $key"]);
+							$this->response_message(404, ["message" => "param $key cannot be empty"]);
 							return false;
 						}
 					}
 					else {
-						$this->response_message(404, ["message" => "param $key cannot be empty"]);
+						$this->response_message(404, ["message" => "param $key not allowed"]);
 						return false;
 					}
 				}
-				else {
-					$this->response_message(404, ["message" => "param $key not allowed"]);
-					return false;
-				}
 			}
-		}
-		else {
-			$this->response_message(404, ["message" => sprintf("%s requests not supported",$this->method)]);
-			return false;
+			else {
+				$this->response_message(404, ["message" => sprintf("%s requests not supported",$this->method)]);
+				return false;
+			}
 		}
 		return true;
 	}
