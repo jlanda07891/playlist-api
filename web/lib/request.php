@@ -90,6 +90,18 @@ class Request {
 		}
 		return true;
 	}
+	
+	/**
+	 * Validate the HTTP method requested
+	 * @return Boolean
+	 */
+	public function validate_http_method(){
+		if(!in_array($this->method,self::HTTP_METHODS)){
+			$this->response_message(404, ["message" => sprintf("HTTP method %s not allowed",$this->method)]);
+			return false;
+		}
+		return true;
+	}
 
 	/**
 	 * Validate the POST parameters
@@ -100,42 +112,35 @@ class Request {
 	public function validate_params($params){
 
 		if($params){
-			if(in_array($this->method,self::HTTP_METHODS)) {
-		
-				// extract keys from parameters
-				$param_keys = array_keys(get_object_vars($params));
+			// extract keys from parameters
+			$param_keys = array_keys(get_object_vars($params));
 
-				// foreach key
-				foreach($param_keys as $key){
-					// if this parameter is allowed 
-					if(isset(self::PARAMS_REGEX[$key])){
+			// foreach key
+			foreach($param_keys as $key){
+				// if this parameter is allowed 
+				if(isset(self::PARAMS_REGEX[$key])){
 
-						// get the value of this parameter
-						$value = $params->$key;
+					// get the value of this parameter
+					$value = $params->$key;
 
-						// if the parameter is not empty
-						if(!empty($value)) {
-							// if the parameter pattern is correct
-							if(preg_match( self::PARAMS_REGEX[$key], $value )) continue;
-							else {
-								$this->response_message(404, ["message" => "bad pattern for param $key"]);
-								return false;
-							}
-						}
+					// if the parameter is not empty
+					if(!empty($value)) {
+						// if the parameter pattern is correct
+						if(preg_match( self::PARAMS_REGEX[$key], $value )) continue;
 						else {
-							$this->response_message(404, ["message" => "param $key cannot be empty"]);
+							$this->response_message(404, ["message" => "bad pattern for param $key"]);
 							return false;
 						}
 					}
 					else {
-						$this->response_message(404, ["message" => "param $key not allowed"]);
+						$this->response_message(404, ["message" => "param $key cannot be empty"]);
 						return false;
 					}
 				}
-			}
-			else {
-				$this->response_message(404, ["message" => sprintf("%s requests not supported",$this->method)]);
-				return false;
+				else {
+					$this->response_message(404, ["message" => "param $key not allowed"]);
+					return false;
+				}
 			}
 		}
 		return true;

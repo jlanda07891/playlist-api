@@ -39,15 +39,11 @@ class PlaylistController {
 	 * @return Request:response_message()
 	 */
 	public function getPlaylistVideos(){
-		// init Video class
-		$id_param = $this->request->get_param('playlist_id');
-		if(isset($id_param)){
-			$playlist = new Playlist($this->db);
-			$playlist->set_playlist_id($id_param);
-			$stmt = $playlist->getOne();
-			// data will be fetched, store into a result and send with a HTTP response
-			$this->return_data($stmt);
-		}
+		$playlist = new Playlist($this->db);
+		$playlist->set_playlist_id($this->request->get_param('playlist_id'));
+		$stmt = $playlist->getOne();
+		// data will be fetched, store into a result and send with a HTTP response
+		$this->return_data($stmt);
 	}
 	
 	/**
@@ -84,18 +80,14 @@ class PlaylistController {
 	public function delete(){
 		// init object
 		$playlist = new Playlist($this->db);
-		// test if all the required params are present 
-		if(!empty($this->request->get_param('playlist_id'))){
-			// set public properties of Playlist
-			$playlist->set_playlist_id($this->request->get_param('playlist_id'));
+		// set public properties of Playlist
+		$playlist->set_playlist_id($this->request->get_param('playlist_id'));
 
-			// delete the playlist
-			if($playlist->delete()){
-				$this->response_message(200,"playlist succesfully deleted");
-			}
-			else $this->response_message(503,"unable to delete playlist");
+		// delete the playlist
+		if($playlist->delete()){
+			$this->response_message(200,"playlist succesfully deleted");
 		}
-		else $this->response_message(404,"unable to delete playlist, please specify a playlist_id");	
+		else $this->response_message(503,"unable to delete playlist");
 	}
 
 	/**

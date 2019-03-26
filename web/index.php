@@ -3,21 +3,24 @@
 /**
 * Include required classes
 *
-* ./config/request.php contains methods to return HTTP responses with a message / parse and validate the GET/POST params
+* ./config/request.php contains methods to return HTTP responses with a message / parse and validate the URI/POST/PUT params
 * ./controller/playlist.php is a controller that contains functions to check required params and call methods from Playlist Model
  */
 include_once './lib/request.php';
 include_once "./controller/playlist.php";
 
 // create a new instance of Request
-$request = new Request($_SERVER, $_GET);
-$method  = $request->getMethod();
+$request 	= new Request($_SERVER, $_GET);
+$http_method  	= $request->getMethod();
 
-// validate the requested URI
-if(!$request->validate_uri()) exit(1);
+// validate the requested URI and the HTTP method
+if(!$request->validate_uri() or !$request->validate_http_method()) exit(1);
+
+// store the POST/PUT parameters
+$post_params 	= json_decode(file_get_contents("php://input"));
 
 // header based on the HTTP method
-if($method == "GET"){
+if($http_method == "GET"){
 	header('Content-Type: text/plain');
 }
 else {
@@ -28,38 +31,39 @@ else {
 	header("Access-Control-Max-Age: 3600");
 	header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
-	// store and test the POST / PUT params
-	$post_params 	= json_decode(file_get_contents("php://input"));
-	// stop if something is wrong with parameters
+	// stop if something is wrong with JSON parameters given
 	if(!$request->validate_params($post_params)) exit(1);
 }
-
 
 // create a new instance of PlaylistController
 $controller = new PlaylistController($_GET, $post_params);
 
 // get the URI parameters for the dispatch
+// possible values : playlists / videos
 $ressource 	= $request->get_param('ressource1'); 
 $playlist_id 	= $request->get_param('playlist_id'); 
+// possible value : video
 $ressource2 	= $request->get_param('ressource2'); 
 $video_id 	= $request->get_param('video_id'); 
 
 // dispatch to the controller, based on the method given and ressource requested in URI
-switch($method){
+switch($http_method){
 
 	case "GET":
 		switch($ressource){
 			case "playlists":
 				// URI pattern : /playlists/id_playlist/videos/ 
-				if(!empty($ressource2)) {
-					if($ressource2=="videos") $controller->getPlaylistVideos();
-					else $request->response_message(404, ["message" => "please request a known ressource 2"]);
+				if(!empty($ressource2) and !empty($playlist_id)) {
+					// get all the videos from a playlist
+					$controller->getPlaylistVideos();
 				}
-				// URI pattern : /playlists/id_playlist/ 
+				// URI pattern : /playlists/id_playlist/
+				// get a specific playlist / all the playlists
 				else $controller->getPlaylists();
 				break;
 			case "videos":
 				// URI pattern : /videos/
+				// get all videos
 				$controller->getAllVideos();
 				break;
 			default:
