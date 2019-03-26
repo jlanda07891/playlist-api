@@ -43,7 +43,7 @@ class PlaylistController {
 		$id_param = $this->request->get_param('playlist_id');
 		if(isset($id_param)){
 			$playlist = new Playlist($this->db);
-			$playlist->playlist_id = $id_param;
+			$playlist->set_playlist_id($id_param);
 			$stmt = $playlist->getOne();
 			// data will be fetched, store into a result and send with a HTTP response
 			$this->return_data($stmt);
@@ -69,9 +69,9 @@ class PlaylistController {
 		// init Playlist class
 		$playlist = new Playlist($this->db);
 		// if a playlist id is specified
-		if(isset($this->get_params['id'])){
+		if(!empty($this->request->get_param('playlist_id'))){
 			// give the playlist_id to the Playlist instance
-			$playlist->playlist_id = $this->get_params['id'];
+			$playlist->set_playlist_id($this->request->get_param('playlist_id'));
 		}
 		$stmt = $playlist->getAll();
 		$this->return_data($stmt);
@@ -85,9 +85,9 @@ class PlaylistController {
 		// init object
 		$playlist = new Playlist($this->db);
 		// test if all the required params are present 
-		if(isset($this->get_params['id'])){
+		if(!empty($this->request->get_param('playlist_id'))){
 			// set public properties of Playlist
-			$playlist->playlist_id = $this->get_params['id'];
+			$playlist->set_playlist_id($this->request->get_param('playlist_id'));
 
 			// delete the playlist
 			if($playlist->delete()){
@@ -106,19 +106,17 @@ class PlaylistController {
 		
 		// init object
 		$playlist = new Playlist($this->db);
-		// test if all the required params are present 
-		if(!empty($this->get_params['id']) && !empty($this->get_params['id_video'])){
-			// set public properties of Playlist
-			$playlist->playlist_id 	   = $this->post_params->id_playlist;
-			
-			$video_id = $this->post_params->id_video;
-			// remove the video from the playlist
-			if($playlist->remove_video($video_id)){
-				$this->response_message(200,"video succesfully removed to playlist");
-			}
-			else $this->response_message(503,"unable to remove video from playlist");
+
+		// set public properties of Playlist
+		$playlist->set_playlist_id($this->request->get_param('playlist_id'));
+		
+		$video_id = $this->request->get_param('video_id');
+
+		// remove the video from the playlist
+		if($playlist->remove_video($video_id)){
+			$this->response_message(200,"video succesfully removed to playlist");
 		}
-		else $this->response_message(404,"unable to remove the video, please specify an id_video and id_playlist");
+		else $this->response_message(503,"unable to remove video from playlist");
 	}
 
 	/**
@@ -130,10 +128,10 @@ class PlaylistController {
 		// init Playlist class
 		$playlist = new Playlist($this->db);
 		// test if all the required params are present
-		if(!empty($this->post_params->id_video) && !empty($this->post_params->id_playlist) && !empty($this->post_params->placement)){
+		if(!empty($this->post_params->placement)){
 			// set public properties of Playlist
-			$playlist->playlist_id 	   = $this->post_params->id_playlist;
-			$video_id        	   = $this->post_params->id_video;
+			$playlist->set_playlist_id($this->request->get_param('playlist_id'));
+			$video_id        	   = $this->request->get_param('video_id');
 			$video_placement 	   = $this->post_params->placement;
 
 			// move the video in playlist
@@ -154,9 +152,9 @@ class PlaylistController {
 		// init Playlist class
 		$playlist = new Playlist($this->db);
 		// test if all the required params are present
-		if(!empty( $this->request->get_param('video_id') ) && !empty( $this->request->get_param('playlist_id') ) && !empty($this->post_params->placement)){
+		if(!empty($this->post_params->placement)){
 			// set public properties of Playlist
-			$playlist->playlist_id 	   = $this->request->get_param('playlist_id');
+			$playlist->set_playlist_id($this->request->get_param('playlist_id'));
 			$video_id        	   = $this->request->get_param('video_id');
 			$video_placement 	   = $this->post_params->placement;
 
@@ -178,10 +176,10 @@ class PlaylistController {
 		// init Playlist class
 		$playlist = new Playlist($this->db);
 		// test if all the required params are present
-		if(!empty($this->post_params->name) and !empty($this->post_params->id_playlist)){
+		if(!empty($this->post_params->name)){
 			// set public properties of Playlist
-			$playlist->name = $this->post_params->name;
-			$playlist->playlist_id = $this->post_params->id_playlist;
+			$playlist->set_name($this->post_params->name);
+			$playlist->set_playlist_id($this->request->get_param('playlist_id'));
 
 			// update the playlist
 			if($playlist->update()){
@@ -203,7 +201,7 @@ class PlaylistController {
 		// test if all the required params are present
 		if(!empty($this->post_params->name)){
 			// set public properties of Playlist
-			$playlist->name = $this->post_params->name;
+			$playlist->set_name($this->post_params->name);
 
 			// create the playlist
 			if($playlist->create()){

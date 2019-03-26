@@ -13,42 +13,46 @@ include_once "./controller/playlist.php";
 $request = new Request($_SERVER, $_GET);
 $method  = $request->getMethod();
 
-// TODO EXPLAIN
+// validate the requested URI
+if(!$request->validate_uri()) exit(1);
+
+// header based on the HTTP method
 if($method == "GET"){
 	header('Content-Type: text/plain');
 }
-// api is called with POST/PUT method
 else {
 	header("Access-Control-Allow-Origin: *");
 	header("Content-Type: application/json; charset=UTF-8");
 	header("Access-Control-Allow-Methods: POST, PUT, DELETE");
+	// allows all our wanted HTTP methods to have expiration of access control
 	header("Access-Control-Max-Age: 3600");
 	header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
-	// store and test the POST params
+	// store and test the POST / PUT params
 	$post_params 	= json_decode(file_get_contents("php://input"));
 	// stop if something is wrong with parameters
 	if(!$request->validate_params($post_params)) exit(1);
 }
 
+
 // create a new instance of PlaylistController
 $controller = new PlaylistController($_GET, $post_params);
 
-// TODO rename actions & actions 2
-$action 	= $request->get_param('action'); 
+// get the URI parameters for the dispatch
+$ressource 	= $request->get_param('ressource1'); 
 $playlist_id 	= $request->get_param('playlist_id'); 
-$action2 	= $request->get_param('action2'); 
+$ressource2 	= $request->get_param('ressource2'); 
 $video_id 	= $request->get_param('video_id'); 
 
-// dispatch to the controller, based on the method given and action required in URI
+// dispatch to the controller, based on the method given and ressource requested in URI
 switch($method){
 
 	case "GET":
-		switch($action){
+		switch($ressource){
 			case "playlists":
 				// URI pattern : /playlists/id_playlist/videos/ 
-				if(!empty($action2)) {
-					if($action2=="videos") $controller->getPlaylistVideos();
+				if(!empty($ressource2)) {
+					if($ressource2=="videos") $controller->getPlaylistVideos();
 					else $request->response_message(404, ["message" => "please request a known ressource 2"]);
 				}
 				// URI pattern : /playlists/id_playlist/ 
@@ -59,61 +63,47 @@ switch($method){
 				$controller->getAllVideos();
 				break;
 			default:
-				$request->response_message(404, ["message" => "please request a known action"]);
+				$request->response_message(404, ["message" => "please request a known ressource"]);
 				break;
 		}
 		break;
 	case "POST":
-		switch($action){
-			case "playlists":
-				// URI pattern : /playlists/id_playlist/videos/id_video/
-				// add a video to the playlist with position
-				if(!empty($playlist_id) && !empty($video_id)){
-					$controller->add_video();	
-				}
-				// URI pattern : /playlists/
-				// create a playlist
-				else $controller->create();
-				break;
-			default:
-				$request->response_message(404, ["message" => "please request a known action"]);
-				break;
-		}
+		if($ressource == "playlists"){
+			// URI pattern : /playlists/id_playlist/videos/id_video/
+			// add a video to the playlist with position
+			if(!empty($playlist_id) && !empty($video_id)){
+				$controller->add_video();	
+			}
+			// URI pattern : /playlists/
+			// create a playlist
+			else $controller->create();
+		} 
+		else $request->response_message(404, ["message" => "please request a known ressource"]);
 		break;
 	case "PUT":
-		switch($action){
-
-			case "playlists":
-				// URI pattern : /playlists/id_playlist/videos/id_video/
+		if($ressource == "playlists"){
+			// URI pattern : /playlists/id_playlist/videos/id_video/
+			if(!empty($playlist_id)){
 				// move a video into a playlist with position
-				if(!empty($playlist_id) && !empty($video_id)){
-					$controller->move_video();	
-				}
-				// URI pattern : /playlists/id_playlist/
+				if(!empty($video_id)) $controller->move_video();	
 				// update a playlist
 				else $controller->update();
-				break;
-			default:
-				$request->response_message(404, ["message" => "please request a known action"]);
-				break;
+			}
+			else $request->response_message(404,["message" => "unable to modify playlist, please specify a playlist_id"]); 
 		}
+		else $request->response_message(404, ["message" => "please request a known ressource"]);
 		break;
 	case "DELETE":
-		switch($action){
-
-			case "playlists":
-				// URI pattern : /playlists/id_playlist/videos/id_video/
+		if($ressource == "playlists"){
+			// URI pattern : /playlists/id_playlist/videos/id_video/
+			if(!empty($playlist_id)){
 				// remove a video from a playlist
-				if(!empty($playlist_id) && !empty($video_id)){
-					$controller->remove_video();	
-				}
-				// URI pattern : /playlists/id_playlist/
+				if(!empty($video_id)) $controller->remove_video();
 				// delete a playlist
 				else $controller->delete();
-				break;
-			default:
-				$request->response_message(404, ["message" => "please request a known action"]);
-				break;
+			}
+			else $request->response_message(404,["message" => "unable to delete playlist, please specify a playlist_id"]);
 		}
+		else $request->response_message(404, ["message" => "please request a known ressource"]);
 		break;
 }

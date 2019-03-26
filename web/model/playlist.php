@@ -13,19 +13,38 @@ class Playlist {
 	private $mysql_table = "playlist";
 
 	/**
-	 * public properties of playlist and video
-	 * will be setted from the controller
+	 * private properties of playlist and video
 	 *
 	 * @param integer $playlist_id The id of the playlist
 	 * @param string $name The name of the playlist
 	 *
  	*/
-	public $playlist_id;
-	public $name;
+	private $playlist_id;
+	private $name;
 
 	/* construct */
 	public function __construct($db){
 		$this->conn = $db;
+	}
+	
+	/**
+	 * Setter for playlist_id
+	 *
+	 * @param integer $playlist_id The id of the playlist
+	 * @return void
+	 */
+	public function set_playlist_id($playlist_id){
+		$this->playlist_id = $playlist_id;
+	}
+
+	/**
+	 * Setter for name
+	 *
+	 * @param string $name The name of the playlist
+	 * @return void
+	 */
+	public function set_name($name){
+		$this->name = $name;
 	}
 
 	/**
